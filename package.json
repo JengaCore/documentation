@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "NODE_OPTIONS=--openssl-legacy-provider npx npx vuepress dev docs",
     "build": "NODE_OPTIONS='--max-old-space-size=8192' npx npx vuepress build docs",
+    "i18n:check": "node scripts/i18n-drift-check.mjs --base origin/main --head HEAD --markdown-out i18n-report.md --json-out i18n-report.json",
     "build:plantuml:all": "./scripts/_build_plantuml.sh",
     "build:plantuml:diff": "MODE=STAGED_GIT ./scripts/_build_plantuml.sh",
     "lint": "npx markdownlint './docs/**/*.md' --ignore node_modules --config markdownlint.yaml",
@@ -24,10 +25,10 @@
   "devDependencies": {
     "@vuepress/plugin-back-to-top": "^1.9.10",
     "@vuepress/plugin-medium-zoom": "^1.9.10",
-    "got": "^15.0.0",
+    "got": "^15.0.1",
     "husky": "^9.1.7",
     "markdownlint-cli": "^0.48.0",
-    "npm-check-updates": "^20.0.0",
+    "npm-check-updates": "^20.0.1",
     "plantuml-encoder": "^1.4.0",
     "svgo": "^4.0.1",
     "vuepress": "^1.9.10",
