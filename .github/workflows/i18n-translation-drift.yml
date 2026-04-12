@@ -8,7 +8,7 @@ on:
       - "scripts/i18n-drift-check.mjs"
   push:
     branches:
-      - main
+      - master
     paths:
       - "docs/**/*.md"
       - "docs/.vuepress/config.js"
@@ -84,7 +84,7 @@ jobs:
             i18n-report.json
             i18n-report.md
 
-  create-issue-on-main:
+  create-issue-on-master:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +116,7 @@ jobs:
 
             const title = `i18n: translation updates required for ${context.sha.slice(0, 7)}`;
             const body = [
-              "This issue was auto-created after source documentation changes were merged to `main`.",
+              "This issue was auto-created after source documentation changes were merged to `master`.",
               "",
               md,
               "",
@@ -133,7 +133,7 @@ jobs:
       - name: Upload i18n report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: i18n-report-main
+          name: i18n-report-master
           path: |
             i18n-report.json
             i18n-report.md
