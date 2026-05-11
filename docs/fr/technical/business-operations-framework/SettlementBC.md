@@ -123,7 +123,7 @@ De plus, l’utilisateur et les références sont capturés dans les listes d’
 
 ### RBAC
 
-Pour exploiter au mieux le contrôle RBAC, les quatre processus ci-dessus seront implémentés comme combinaisons distinctes de point de terminaison API et méthode HTTP. Cela autorise des permissions dédiées à chaque processus.
+Pour exploiter au mieux le contrôle RBAC, les quatre processus ci-dessus seront implémentés comme combinaisons distinctes d'endpoint API et méthode HTTP. Cela autorise des permissions dédiées à chaque processus.
 
 ## Prise en charge du multi-devises
 
@@ -137,7 +137,7 @@ Comme il est difficile de séparer un règlement une fois initié, il est préf�
 
 ---
 **REMARQUE**
-Si vous exécutez un modèle net différé multilatéral à devise unique et utilisez des devises test pour vos tests réguliers, il est préférable de créer les règlements des devises de test séparément de la devise réelle. Idéalement, il ne faut pas avoir à sélectionner la devise ou un modèle lors de l’initiation du règlement.
+Si vous exécutez un modèle net différé multilatéral à devise unique et utilisez des devises test pour vos tests réguliers, il est préférable de créer les règlements des devises de test séparément du devise réelle. Idéalement, il ne faut pas avoir à sélectionner la devise ou un modèle lors de l’initiation du règlement.
 Cela s’obtient en créant des modèles séparés : un pour chaque monnaie test, un pour la monnaie réelle.
 Par défaut, l’initiation sur transactions multi-devises génère des règlements séparés. (La fonction de détermination des modèles les trouvera tous.)
 ___

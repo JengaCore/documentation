@@ -31,15 +31,15 @@ sidebarTitle: Invariants
 
 **La logique de mise en place de transaction, propre aux cas d’usage, est séparée du transfert d’argent sans logique métier.**
 
-1. Les détails de transaction et règles métier sont capturés et convenus comme règles de schéma et guides d’exploitation technique ; ils peuvent être appliqués pendant la cotation par les contreparties et sont portés entre elles par le Hub.
+1. Les détails de transaction et règles métier sont capturés et convenus comme règles de schéma et guides d’exploitation technique ; ils peuvent être appliqués pendant le devis par les contreparties et sont portés entre elles par le Hub.
 2. La phase d’accord établit un objet de transaction signé, spécifique au cas d’usage, intégrant tous les détails propres à la transaction.
 3. La phase de transfert orchestre la compensation de la valeur de détail entre institutions au profit des contreparties (seuls des contrôles de limites système s’appliquent), sans référence aux détails métier de la transaction.
 4. Aucun traitement supplémentaire propre à la transaction pendant la phase de transfert.
 
 **Le hub n’analyse ni n’agit sur les détails de bout en bout de la transaction ; les messages de transfert ne contiennent que les valeurs nécessaires à la compensation et au règlement.**
 
-1. Les contrôles pendant l’étape de transfert portent uniquement sur la conformité aux règles du schéma, les limites, l’authentification des signatures et la validation de la condition de paiement et de son accomplissement.
-2. Les transferts engagés pour le règlement sont définitifs et garantis de se régler selon les règles du schéma.
+1. Les contrôles pendant l’étape de transfert portent uniquement sur la conformité aux règles du système, les limites, l’authentification des signatures et la validation de la condition de paiement et de son accomplissement.
+2. Les transferts engagés pour le règlement sont définitifs et garantis de se régler selon les règles du système.
 
 **La sémantique de transfert *credit-push* est réduite à sa forme la plus simple et normalisée pour tous les types de transaction.**
 

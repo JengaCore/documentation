@@ -40,8 +40,8 @@ Plus d’informations : [Straight Through Processing (Investopedia)](https://www
 
 ### 5. Le hub n’analyse pas et n’agit pas sur les détails de transaction de bout en bout ; les messages de transfert ne contiennent que les valeurs nécessaires à la compensation et au règlement.
 #### Notes :
-1. Les contrôles et validations à l’étape de transfert portent uniquement sur la conformité aux règles du schéma, les limites, l’authentification par signature, et la validation de la condition et de l’exécution du paiement.
-2. Les transferts engagés pour le règlement sont définitifs et garantis pour s’exécuter selon les règles du schéma.
+1. Les contrôles et validations à l’étape de transfert portent uniquement sur la conformité aux règles du système, les limites, l’authentification par signature, et la validation de la condition et de l’exécution du paiement.
+2. Les transferts engagés pour le règlement sont définitifs et garantis pour s’exécuter selon les règles du système.
 
 
 ### 6. La sémantique des transferts en poussée de crédit est réduite à sa forme la plus simple et standardisée pour tous les types de transaction.
@@ -98,7 +98,7 @@ Plus d’informations : [Straight Through Processing (Investopedia)](https://www
     1. Pour l’intégrité du système, chaque destinataire doit pouvoir vérifier de façon fiable que le message n’a pas été modifié.
     2. La cryptographie asymétrique (signature numérique) est aujourd’hui le mécanisme le plus courant pour une messagerie à intégrité vérifiable.
         1. La sécurité de la clé privée de l’émetteur est critique.
-        2. Les règles du schéma doivent préciser les responsabilités en matière de gestion des clés et l’exposition financière en cas de compromission d’une clé privée.
+        2. Les règles du système doivent préciser les responsabilités en matière de gestion des clés et l’exposition financière en cas de compromission d’une clé privée.
 3. La non-répudiation garantit que le message a bien été envoyé par l’émetteur présumé et que celui-ci ne peut répudier la provenance.
     1. Important pour la responsabilité lors des audits et litiges.
 
@@ -219,7 +219,7 @@ Mojaloop est conçu pour s’intégrer à un système de paiements instantanés 
 
 
 ## Annexe A : aperçu des principes Level One
-Le [Level One Project](https://www.leveloneproject.org) propose un système de paiements à faible coût pour des paiements numériques inclusifs et interopérables. Le [guide Level One Project](https://www.leveloneproject.org/project_guide/03-welcome-to-the-2019-guide/) décrit une vision de système de services financiers numériques inclusifs au service des populations défavorisées. Les principes de conception incluent notamment :
+Le [Level One Project](https://www.leveloneproject.org) propose un système de paiements à faible coût pour des paiements numériques inclusifs et interopérables. Le [guide Level One Project](https://www.leveloneproject.org/project_guide/03-welcome-to-the-2019-guide/) décrit une vision de système de services financiers numériques inclusifs au service des populations à faible revenu. Les principes de conception incluent notamment :
 * Modèle de paiement en poussée de crédit avec transfert immédiat des fonds et règlement le jour même
 * Interopérabilité en boucle ouverte entre fournisseurs
 * Respect de normes internationales bien définies et adoptées

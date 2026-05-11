@@ -13,11 +13,11 @@ Les évolutions futures prévues pour la conception de la conversion de devises 
 
 ## Rôle du fournisseur de change (FXP)
 
-Un élément central de la capacité de conversion de Mojaloop est la prise en charge d’un marché du change concurrentiel, où plusieurs FXP peuvent fournir des cotations de taux en temps réel. Cette conception favorise un environnement ouvert et dynamique pour les opérations de change.
+Un élément central de la capacité de conversion de Mojaloop est la prise en charge d’un marché du change concurrentiel, où plusieurs FXP peuvent fournir des devis de taux en temps réel. Cette conception favorise un environnement ouvert et dynamique pour les opérations de change.
 
 Le processus de conversion de devises suit une chaîne en trois étapes :
-1. **Demande de cotation** — Le DFSP payeur demande une cotation à un FXP. Par exemple, un DFSP zambien peut obtenir une cotation de conversion pour un transfert donné.
-1. **Accord sur la cotation** — Le DFSP payeur examine le taux de change et les conditions proposés par le FXP. Une fois acceptés, le FXP bloque le taux.
+1. **Demande de devis** — Le DFSP payeur demande une devis à un FXP. Par exemple, un DFSP zambien peut obtenir une devis de conversion pour un transfert donné.
+1. **Accord sur le devis** — Le DFSP payeur examine le taux de change et les conditions proposés par le FXP. Une fois acceptés, le FXP bloque le taux.
 1. **Finalisation du transfert** — Sur notification du schéma Mojaloop que le transfert dépendant est achevé, le processus de conversion est finalisé.
 
 Cette approche clarifiée favorise la transparence et la concurrence sur les opérations FX, au bénéfice des DFSP et des utilisateurs finaux.
