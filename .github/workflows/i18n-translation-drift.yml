@@ -114,6 +114,26 @@ jobs:
               return;
             }
 
+            const { owner, repo } = context.repo;
+
+            const baseLabels = [
+              { name: "i18n", color: "e4e669" },
+              { name: "translation-needed", color: "e4e669" },
+            ];
+            const localeLabels = report.locales.map((locale) => ({
+              name: `locale:${locale}`,
+              color: "0075ca",
+            }));
+            const allLabels = [...baseLabels, ...localeLabels];
+
+            for (const label of allLabels) {
+              try {
+                await github.rest.issues.createLabel({ owner, repo, ...label });
+              } catch {
+                // label already exists
+              }
+            }
+
             const title = `i18n: translation updates required for ${context.sha.slice(0, 7)}`;
             const body = [
               "This issue was auto-created after source documentation changes were merged to `master`.",
@@ -124,10 +144,11 @@ jobs:
             ].join("\n");
 
             await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               title,
               body,
+              labels: allLabels.map((l) => l.name),
             });
 
       - name: Upload i18n report artifact
