@@ -128,6 +128,50 @@ jobs:
               echo 'Plantuml files are up to date';
             fi
 
+  i18n_drift_check:
+    executor: default-docker
+    steps:
+      - checkout
+      - run:
+          name: Install general dependencies
+          command: *defaults_Dependencies
+      - run:
+          <<: *defaults_configure_nvm
+      - run:
+          name: install node dependencies
+          command: npm ci
+      - run:
+          name: Fetch base branch for diff comparison
+          command: git fetch origin master:refs/remotes/origin/master
+      - run:
+          name: Run i18n translation drift check
+          command: npm run i18n:check
+      - run:
+          name: Configure GitHub CLI
+          command: apk add --no-cache github-cli
+      - run:
+          name: Upsert PR comment with drift report
+          command: |
+            PR_NUMBER=$(echo "$CIRCLE_PULL_REQUEST" | sed -E 's/.*\/pull\/([0-9]+)$/\1/')
+            if [ -z "$PR_NUMBER" ]; then
+              echo "Not a PR build (CIRCLE_PULL_REQUEST unset); skipping PR comment."
+              exit 0
+            fi
+            MARKER="<!-- i18n-translation-drift -->"
+            { echo "$MARKER"; cat i18n-report.md; } > /tmp/comment-body.md
+            REPO="repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            EXISTING_ID=$(gh api "$REPO/issues/${PR_NUMBER}/comments" --paginate \
+              --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n1)
+            if [ -n "$EXISTING_ID" ]; then
+              gh api "$REPO/issues/comments/${EXISTING_ID}" -X PATCH -f body=@/tmp/comment-body.md
+            else
+              gh api "$REPO/issues/${PR_NUMBER}/comments" -X POST -f body=@/tmp/comment-body.md
+            fi
+      - store_artifacts:
+          path: i18n-report.md
+      - store_artifacts:
+          path: i18n-report.json
+
   infra:
     executor: default-docker
     steps:
@@ -415,6 +459,12 @@ workflows:
               only: /.*/
 
       - test-puml:
+          context: org-global
+          filters:
+            tags:
+              only: /.*/
+
+      - i18n_drift_check:
           context: org-global
           filters:
             tags:
