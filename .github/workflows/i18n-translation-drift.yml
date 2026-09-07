@@ -1,11 +1,26 @@
 name: i18n translation drift
 
+# Reports which source pages changed without their translations following.
+#
+# Nothing here blocks a merge. This repository is English-first: a contributor adding an
+# English page cannot be expected to also write French, so failing their PR would only
+# teach people to route around the check. The report informs; the tracking issue on
+# `master` is what keeps the backlog from being forgotten.
+#
+# FR : signale les pages source modifiées dont la traduction n'a pas suivi.
+#
+# Rien ici ne bloque une fusion. Ce dépôt est anglais d'abord : on ne peut pas exiger d'un
+# contributeur qui ajoute une page anglaise qu'il rédige aussi le français, et faire échouer
+# sa PR ne lui apprendrait qu'à contourner le contrôle. Le rapport informe ; c'est l'issue
+# de suivi sur `master` qui empêche le backlog d'être oublié.
+
 on:
   pull_request:
     paths:
       - "docs/**/*.md"
       - "docs/.vuepress/config.js"
       - "scripts/i18n-drift-check.mjs"
+      - "scripts/i18n-baseline.json"
   push:
     branches:
       - master
@@ -13,11 +28,30 @@ on:
       - "docs/**/*.md"
       - "docs/.vuepress/config.js"
       - "scripts/i18n-drift-check.mjs"
+      - "scripts/i18n-baseline.json"
+  schedule:
+    # Monday 06:00 UTC - refreshes the standing backlog even when nothing was pushed.
+    # FR : lundi 06:00 UTC — rafraîchit le backlog même si rien n'a été poussé.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: write
   issues: write
+
+# Two pushes landing close together would otherwise run two jobs that each look for the
+# tracking issue, each find none, and each create one - reintroducing the duplicate-issue
+# problem this workflow exists to avoid. The group is per-ref so a PR and master never
+# cancel each other.
+#
+# FR : sans cela, deux pushes rapprochés lanceraient deux jobs qui cherchent chacun l'issue
+# de suivi, n'en trouvent aucune, et en créent chacun une — réintroduisant le problème de
+# doublons que ce workflow est censé éviter. Le groupe est par ref, de sorte qu'une PR et
+# master ne s'annulent jamais mutuellement.
+concurrency:
+  group: i18n-drift-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   report-pr:
@@ -27,7 +61,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # The script diffs base...head, which needs real history, not a shallow clone.
+          # FR : le script compare base...head, ce qui exige un historique réel et non un
+          # clone superficiel.
           fetch-depth: 0
+
+      - name: Use the project's Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
 
       - name: Generate i18n drift report
         run: |
@@ -37,46 +79,49 @@ jobs:
             --json-out i18n-report.json \
             --markdown-out i18n-report.md
 
+      # Written first and unconditionally: a fork PR gets a read-only GITHUB_TOKEN, so the
+      # comment step below cannot post. The summary is always readable from the run page.
+      #
+      # FR : écrit en premier et sans condition — une PR venant d'un fork reçoit un
+      # GITHUB_TOKEN en lecture seule, donc l'étape de commentaire ci-dessous ne peut pas
+      # publier. Le résumé, lui, reste toujours lisible depuis la page d'exécution.
+      - name: Publish report to the job summary
+        if: always()
+        run: cat i18n-report.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upsert pull request comment
+        # Forks cannot be commented on with the default token; skip rather than fail red.
+        # FR : impossible de commenter une PR de fork avec le token par défaut — on saute
+        # l'étape plutôt que de faire échouer le job pour une mauvaise raison.
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require("fs");
-            const body = fs.readFileSync("i18n-report.md", "utf8");
             const marker = "<!-- i18n-translation-drift -->";
-            const finalBody = `${marker}\n${body}`;
+            const body = `${marker}\n${fs.readFileSync("i18n-report.md", "utf8")}`;
 
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
 
             const comments = await github.paginate(github.rest.issues.listComments, {
-              owner,
-              repo,
-              issue_number,
-              per_page: 100,
+              owner, repo, issue_number, per_page: 100,
             });
-
-            const existing = comments.find((comment) =>
-              comment.user?.type === "Bot" && comment.body?.includes(marker)
+            const existing = comments.find(
+              (comment) => comment.user?.type === "Bot" && comment.body?.includes(marker)
             );
 
             if (existing) {
               await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existing.id,
-                body: finalBody,
+                owner, repo, comment_id: existing.id, body,
               });
             } else {
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number,
-                body: finalBody,
-              });
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
 
       - name: Upload i18n report artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: i18n-report-pr
@@ -84,8 +129,8 @@ jobs:
             i18n-report.json
             i18n-report.md
 
-  create-issue-on-master:
-    if: github.event_name == 'push'
+  track-backlog:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -93,15 +138,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate i18n drift report
+      - name: Use the project's Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # A full audit rather than a diff: the tracking issue should describe the state of
+      # the repository, not of whichever commit happened to land last.
+      #
+      # FR : un audit complet plutôt qu'un diff — l'issue de suivi doit décrire l'état du
+      # dépôt, et non celui du dernier commit arrivé par hasard.
+      - name: Generate i18n backlog audit
         run: |
           node scripts/i18n-drift-check.mjs \
-            --base "${{ github.event.before }}" \
-            --head "${{ github.sha }}" \
+            --audit \
             --json-out i18n-report.json \
             --markdown-out i18n-report.md
 
-      - name: Create issue when drift exists
+      - name: Publish report to the job summary
+        if: always()
+        run: cat i18n-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update the single tracking issue
         uses: actions/github-script@v7
         with:
           script: |
@@ -109,52 +167,73 @@ jobs:
             const report = JSON.parse(fs.readFileSync("i18n-report.json", "utf8"));
             const md = fs.readFileSync("i18n-report.md", "utf8");
 
+            const { owner, repo } = context.repo;
+            const marker = "<!-- i18n-translation-backlog -->";
+            const title = "i18n: translation backlog";
+
+            // One long-lived issue, found by marker and updated in place. Creating a fresh
+            // issue per push buries the repository in near-identical tickets.
+            // FR : une seule issue durable, retrouvée par son marqueur et mise à jour en
+            // place. Créer une issue par push enterre le dépôt sous des tickets quasi
+            // identiques.
+            const found = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: "all", labels: "i18n", per_page: 100,
+            });
+            const tracking = found.find(
+              (issue) => !issue.pull_request && issue.body?.includes(marker)
+            );
+
             if (!report.hasDrift) {
-              core.info("No translation drift detected; no issue created.");
+              core.info("No drift outside the baseline.");
+              if (tracking && tracking.state === "open") {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: tracking.number,
+                  body: "All tracked locales are up to date. Closing until drift reappears.",
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: tracking.number, state: "closed",
+                });
+              }
               return;
             }
 
-            const { owner, repo } = context.repo;
-
-            const baseLabels = [
+            for (const label of [
               { name: "i18n", color: "e4e669" },
               { name: "translation-needed", color: "e4e669" },
-            ];
-            const localeLabels = report.locales.map((locale) => ({
-              name: `locale:${locale}`,
-              color: "0075ca",
-            }));
-            const allLabels = [...baseLabels, ...localeLabels];
-
-            for (const label of allLabels) {
+            ]) {
               try {
                 await github.rest.issues.createLabel({ owner, repo, ...label });
               } catch {
-                // label already exists
+                // Already exists.
               }
             }
 
-            const title = `i18n: translation updates required for ${context.sha.slice(0, 7)}`;
             const body = [
-              "This issue was auto-created after source documentation changes were merged to `master`.",
-              "",
+              marker,
               md,
               "",
-              "Please coordinate locale updates with maintainers/reviewers.",
+              `<sub>Updated automatically from \`${context.sha.slice(0, 7)}\`. ` +
+                "Edits to this body will be overwritten; use comments for discussion.</sub>",
             ].join("\n");
 
-            await github.rest.issues.create({
-              owner,
-              repo,
-              title,
-              body,
-              labels: allLabels.map((l) => l.name),
-            });
+            if (tracking) {
+              await github.rest.issues.update({
+                owner, repo, issue_number: tracking.number, title, body, state: "open",
+              });
+              core.info(`Updated tracking issue #${tracking.number}.`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner, repo, title, body,
+                labels: ["i18n", "translation-needed"],
+              });
+              core.info(`Created tracking issue #${created.data.number}.`);
+            }
 
       - name: Upload i18n report artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: i18n-report-master
+          name: i18n-report-audit
           path: |
             i18n-report.json
             i18n-report.md
